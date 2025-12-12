@@ -449,27 +449,28 @@ usort($family_memories, function($a, $b) {
     return strtotime($b['date'] ?? '') <=> strtotime($a['date'] ?? '');
 });
 ?>
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FamPlan • Семейный организатор</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
+        /* ==================== CSS СТИЛИ ==================== */
+        
         /* Темная бежевая цветовая схема */
         :root {
-            --primary-beige: #E8DBC5;
+            --primary-beige: white;
             --secondary-beige: #D4C4A8;
             --dark-beige: #A8997E;
             --light-beige: #F5EFE0;
             --text-beige: #5D5342;
             
             --accent-coral: #C9A68E;
-            --accent-blue: #A8C3CE;
+            --accent-blue: #7E7C81;
             --accent-peach: #E0C9B1;
             --accent-lavender: #C7B8A6;
             --accent-mint: #B5C7B1;
@@ -477,8 +478,1878 @@ usort($family_memories, function($a, $b) {
             --text-dark: #3C3529;
             --text-medium: #6B6251;
             --text-light: #8A7F6D;
+            
+            --shadow: 0 8px 32px rgba(92, 83, 66, 0.15);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+            
+            --success: #28a745;
+            --error: #dc3545;
+            --info: grey;
         }
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, var(--primary-beige) 0%, var(--secondary-beige) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Экран авторизации */
+        .auth-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            background: var(--light-beige);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.8s ease;
+            border: 2px solid var(--dark-beige);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .logo-image {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-coral);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            overflow: hidden;
+            border: 3px solid var(--dark-beige);
+        }
+        
+        .logo-main h1 {
+            font-family: 'Pacifico', cursive;
+            font-size: 36px;
+            color: var(--text-dark);
+        }
+        
+        .tagline {
+            color: var(--text-medium);
+            font-size: 16px;
+        }
+        
+        .auth-form {
+            margin-top: 20px;
+        }
+        
+        .auth-form h2 {
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .demo-info {
+            background: var(--accent-mint);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--text-dark);
+            border-left: 4px solid var(--accent-blue);
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            z-index: 1;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            background: var(--primary-beige);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(168, 195, 206, 0.2);
+        }
+        
+        .show-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+        }
+        
+        .btn-auth {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, var(--accent-coral), var(--accent-peach));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(201, 166, 142, 0.3);
+        }
+        
+        .notification {
+            position: relative;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid var(--success);
+        }
+        
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid var(--error);
+        }
+        
+        .notification.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid var(--info);
+        }
+        
+        /* Основной интерфейс */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Боковая панель */
+        .sidebar {
+            width: 260px;
+            background: var(--light-beige);
+            border-right: 2px solid var(--dark-beige);
+            display: flex;
+            flex-direction: column;
+            padding: 25px 0;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 25px;
+            border-bottom: 2px solid var(--secondary-beige);
+        }
+        
+        .logo-sidebar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .logo-sidebar h2 {
+            font-family: 'Pacifico', cursive;
+            font-size: 24px;
+            color: var(--text-dark);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .user-details h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: var(--text-medium);
+            background: var(--secondary-beige);
+            padding: 3px 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 25px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: var(--text-medium);
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .nav-item:hover {
+            background: var(--secondary-beige);
+            color: var(--text-dark);
+            border-left-color: var(--accent-coral);
+        }
+        
+        .nav-item.active {
+            background: var(--primary-beige);
+            color: var(--accent-coral);
+            border-left-color: var(--accent-coral);
+        }
+        
+        .nav-item i {
+            font-size: 18px;
+            width: 20px;
+        }
+        
+        .sidebar-footer {
+            padding: 0 20px;
+        }
+        
+        .btn-logout {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, var(--text-light), var(--text-medium));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+        
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--secondary-beige);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-left h1 {
+            font-size: 32px;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            font-family: 'Pacifico', cursive;
+        }
+        
+        .greeting {
+            font-size: 16px;
+            color: var(--text-medium);
+        }
+        
+        .date-display {
+            background: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 2px solid var(--dark-beige);
+        }
+        
+        /* Контентные секции */
+        .content-sections {
+            margin-top: 15px;
+        }
+        
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .section-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            color: var(--text-dark);
+        }
+        
+        .btn-add {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, var(--accent-blue), var(--accent-mint));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(168, 195, 206, 0.3);
+        }
+        
+        /* Календарь */
+        .calendar-widget {
+            background: var(--light-beige);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            border: 2px solid var(--dark-beige);
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        
+        .calendar-nav {
+            background: none;
+            border: none;
+            color: var(--text-medium);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-nav:hover {
+            background: var(--secondary-beige);
+            color: var(--text-dark);
+        }
+        
+        #currentMonth {
+            font-size: 20px;
+            margin: 0 20px;
+            color: var(--text-dark);
+            min-width: 200px;
+            text-align: center;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            padding: 12px 5px;
+            font-weight: 700;
+            color: var(--text-medium);
+            background: var(--secondary-beige);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            background: var(--primary-beige);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        
+        .calendar-day:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--accent-blue);
+        }
+        
+        .calendar-day.today {
+            background: var(--accent-mint);
+            border-color: var(--accent-blue);
+            font-weight: bold;
+        }
+        
+        .calendar-day.has-memories {
+            background: #FFF9E6;
+        }
+        
+        .day-number {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+        
+        .memory-indicator {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 10px;
+            color: var(--accent-coral);
+        }
+        
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+        
+        .calendar-day.empty:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+        
+        /* Чек-листы */
+        .checklists-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .checklist-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+        }
+        
+        .checklist-header {
+            padding: 20px;
+            background: var(--accent-mint);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .checklist-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            color: var(--text-dark);
+            flex: 1;
+        }
+        
+        .checklist-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-delete-checklist {
+            background: var(--error);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-delete-checklist:hover {
+            transform: scale(1.1);
+            background: #c82333;
+        }
+        
+        .checklist-items {
+            padding: 20px;
+            min-height: 100px;
+        }
+        
+        .checklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--primary-beige);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            gap: 12px;
+        }
+        
+        .checklist-item:hover {
+            background: var(--secondary-beige);
+        }
+        
+        .checklist-item.checked {
+            background: #F0FFF4;
+        }
+        
+        .checklist-item.checked .item-text {
+            text-decoration: line-through;
+            color: var(--text-light);
+        }
+        
+        .toggle-form {
+            margin: 0;
+            padding: 0;
+            display: inline;
+        }
+        
+        .check-btn {
+            background: none;
+            border: none;
+            color: var(--text-medium);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .check-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .item-text {
+            font-size: 15px;
+            color: var(--text-dark);
+            flex: 1;
+        }
+        
+        .item-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .checklist-item:not(.checked) .item-status {
+            background: #FFF3CD;
+            color: #856404;
+        }
+        
+        .checklist-item.checked .item-status {
+            background: #D4EDDA;
+            color: #155724;
+        }
+        
+        .add-checklist-item {
+            padding: 15px;
+            border-top: 2px solid var(--secondary-beige);
+        }
+        
+        .add-checklist-item form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .add-checklist-item input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: var(--primary-beige);
+        }
+        
+        .btn-add-item {
+            width: 40px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-add-item:hover {
+            background: var(--accent-coral);
+            transform: scale(1.05);
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--dark-beige);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            color: var(--text-medium);
+        }
+        
+        /* Воспоминания */
+        .memories-container {
+            margin-top: 20px;
+        }
+        
+        .memories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        
+        .memory-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+            transition: all 0.3s ease;
+        }
+        
+        .memory-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .memory-image {
+            height: 180px;
+            overflow: hidden;
+        }
+        
+        .memory-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .memory-card:hover .memory-image img {
+            transform: scale(1.05);
+        }
+        
+        .memory-content {
+            padding: 20px;
+        }
+        
+        .memory-content h3 {
+            font-size: 18px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .memory-content p {
+            color: var(--text-medium);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .memory-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        .memory-date, .memory-author {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Семья */
+        .family-members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .family-member-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+            transition: all 0.3s ease;
+        }
+        
+        .family-member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .member-role, .member-email {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-medium);
+            margin-bottom: 5px;
+        }
+        
+        /* Чат */
+        .chat-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .empty-chat {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+        
+        .empty-chat i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .empty-chat h3 {
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .empty-chat p {
+            color: var(--text-medium);
+        }
+        
+        .message {
+            max-width: 75%;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .message.sent {
+            align-self: flex-end;
+            background: var(--accent-blue);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.received {
+            align-self: flex-start;
+            background: var(--primary-beige);
+            color: var(--text-dark);
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .message-sender {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sender-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .sender-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sender-info strong {
+            font-size: 13px;
+            line-height: 1;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        .message-content {
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        
+        .message-input {
+            padding: 15px;
+            border-top: 2px solid var(--secondary-beige);
+            background: var(--light-beige);
+        }
+        
+        .message-input form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message-input input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: white;
+        }
+        
+        .btn-send {
+            width: 45px;
+            background: var(--accent-coral);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-send:hover {
+            background: var(--accent-peach);
+            transform: scale(1.05);
+        }
+        
+        /* ==================== СТИЛИ ДЛЯ ВКЛАДКИ ДАННЫХ ==================== */
+        
+        /* Блок данных */
+        .data-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        /* Карточки статистики */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card.pulse-card {
+            animation: pulse 2s infinite;
+            background: linear-gradient(135deg, #FF9AA2, #FFD3B6);
+            color: white;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-content h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--text-medium);
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        /* Круг прогресса */
+        .progress-circle {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            margin: 10px 0;
+        }
+        
+        .circle-progress {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-blue) 0% 85%, var(--secondary-beige) 85% 100%);
+        }
+        
+        .progress-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+        
+        /* Спарклайн */
+        .sparkline-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .sparkline {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+        }
+        
+        .sparkline-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+        
+        /* Карточка приглашения */
+        .family-invite-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+        }
+        
+        .invite-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .invite-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            color: var(--text-dark);
+        }
+        
+        .invite-content {
+            background: var(--light-beige);
+            border-radius: var(--radius-md);
+            padding: 20px;
+        }
+        
+        .invite-code-display, .invite-link-display {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .invite-code-display code {
+            flex: 1;
+            background: white;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 2px;
+            color: var(--accent-coral);
+            border: 2px dashed var(--accent-coral);
+        }
+        
+        .invite-link-display input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: white;
+        }
+        
+        .btn-copy, .btn-copy-small {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-copy:hover {
+            background: var(--accent-coral);
+            transform: translateY(-2px);
+        }
+        
+        .btn-copy-small {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .invite-hint {
+            text-align: center;
+            color: var(--text-medium);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .invite-share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .share-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .share-btn.whatsapp { background: #25D366; }
+        .share-btn.telegram { background: #0088cc; }
+        .share-btn.email { background: var(--accent-coral); }
+        
+        .share-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .invite-tabs {
+            display: flex;
+            gap: 10px;
+            border-top: 2px solid var(--secondary-beige);
+            padding-top: 15px;
+        }
+        
+        .invite-tab {
+            flex: 1;
+            padding: 12px;
+            background: white;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--text-medium);
+            transition: all 0.3s ease;
+        }
+        
+        .invite-tab.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+        
+        /* Креативные фишки */
+        .fun-features {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+        }
+        
+        .fun-features h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-size: 20px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .feature-btn {
+            background: var(--light-beige);
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-btn:hover {
+            background: var(--accent-peach);
+            border-color: var(--accent-coral);
+            transform: translateY(-5px);
+        }
+        
+        .feature-btn i {
+            font-size: 32px;
+            color: var(--accent-coral);
+        }
+        
+        .feature-btn span {
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: center;
+        }
+        
+        /* Таймлайн семьи */
+        .family-timeline-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            color: var(--text-dark);
+        }
+        
+        .timeline-content {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--accent-blue);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--light-beige);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--accent-coral);
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-coral);
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px var(--accent-blue);
+        }
+        
+        .timeline-date {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .timeline-content-text {
+            color: var(--text-dark);
+        }
+        
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(232, 219, 197, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--dark-beige);
+            animation: fadeIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 2px solid var(--secondary-beige);
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+        
+        .modal-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dark);
+            font-size: 20px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .close-modal:hover {
+            background: var(--secondary-beige);
+            color: var(--accent-coral);
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: var(--primary-beige);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(168, 195, 206, 0.2);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .color-picker {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        
+        .color-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+        
+        .color-option:hover {
+            background: var(--secondary-beige);
+        }
+        
+        .color-option input[type="radio"] {
+            display: none;
+        }
+        
+        .color-option input[type="radio"]:checked + .color-dot {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 3px white, 0 0 0 5px var(--text-dark);
+        }
+        
+        .color-dot {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .color-label {
+            font-size: 11px;
+            color: var(--text-medium);
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, var(--accent-coral), var(--accent-peach));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(201, 166, 142, 0.3);
+        }
+        
+        /* Настройки данных */
+        .settings-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--secondary-beige);
+        }
+        
+        .settings-group:last-child {
+            border-bottom: none;
+        }
+        
+        .settings-group h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .setting-item {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .range-slider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .range-slider input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--secondary-beige);
+            outline: none;
+        }
+        
+        .range-slider input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+        }
+        
+        .theme-options {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .theme-option {
+            flex: 1;
+            background: none;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-option:hover {
+            border-color: var(--accent-coral);
+        }
+        
+        .theme-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-coral);
+        }
+        
+        .theme-preview.warm-theme {
+            background: linear-gradient(45deg, #FF9AA2, #FFD3B6);
+        }
+        
+        .theme-preview.cool-theme {
+            background: linear-gradient(45deg, #A8D8EA, #C7CEEA);
+        }
+        
+        .theme-preview.vibrant-theme {
+            background: linear-gradient(45deg, #FF9AA2, #B5EAD7, #FFD3B6);
+        }
+        
+        /* Окно приглашения */
+        .invite-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .invite-option {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: var(--light-beige);
+            border-radius: var(--radius-md);
+            border: 2px solid var(--dark-beige);
+            transition: all 0.3s ease;
+        }
+        
+        .invite-option:hover {
+            border-color: var(--accent-blue);
+            transform: translateX(5px);
+        }
+        
+        .option-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .option-content {
+            flex: 1;
+        }
+        
+        .option-content h4 {
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .option-content p {
+            color: var(--text-medium);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .option-code, .option-link {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .option-code strong {
+            flex: 1;
+            background: white;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            font-size: 18px;
+            text-align: center;
+            color: var(--accent-coral);
+            border: 2px dashed var(--accent-coral);
+        }
+        
+        .option-link input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--dark-beige);
+            border-radius: var(--radius-sm);
+            background: white;
+            font-size: 14px;
+        }
+        
+        .qrcode-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .invite-instructions {
+            background: var(--light-beige);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            border-left: 4px solid var(--accent-mint);
+        }
+        
+        .invite-instructions h4 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .invite-instructions ol {
+            padding-left: 20px;
+            color: var(--text-medium);
+        }
+        
+        .invite-instructions li {
+            margin-bottom: 8px;
+        }
+        
+        /* Кнопки действий */
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-secondary {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, var(--accent-peach), var(--accent-lavender));
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(224, 201, 177, 0.3);
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            background: var(--accent-mint);
+            color: var(--text-dark);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-small:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        /* Уведомления */
         .notification-global {
             position: fixed;
             top: 20px;
@@ -496,9 +2367,182 @@ usort($family_memories, function($a, $b) {
             border: 1px solid rgba(255,255,255,0.2);
         }
         
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .notification-global.success {
+            background: rgba(40, 167, 69, 0.95);
+            color: white;
+        }
+        
+        .notification-global.error {
+            background: rgba(220, 53, 69, 0.95);
+            color: white;
+        }
+        
+        .notification-global.info {
+            background: rgba(23, 162, 184, 0.95);
+            color: white;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+            }
+            
+            .sidebar-nav {
+                display: flex;
+                overflow-x: auto;
+                padding: 15px 0;
+                gap: 10px;
+            }
+            
+            .nav-item {
+                flex-direction: column;
+                padding: 12px;
+                min-width: 90px;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                text-align: center;
+            }
+            
+            .nav-item.active {
+                border-left: none;
+                border-bottom: 3px solid var(--accent-coral);
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .checklists-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .memories-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 25px 15px;
+            }
+            
+            .logo-main h1 {
+                font-size: 28px;
+            }
+            
+            .main-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .calendar-grid {
+                gap: 5px;
+            }
+            
+            .calendar-day {
+                padding: 5px;
+            }
+            
+            .day-number {
+                font-size: 14px;
+            }
+            
+            .family-members-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-container {
+                height: 400px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .modal-content {
+                margin: 10px;
+                max-height: 85vh;
+            }
+            
+            .invite-share-buttons {
+                flex-direction: column;
+            }
+            
+            .theme-options {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .calendar-day-header {
+                font-size: 12px;
+                padding: 8px 2px;
+            }
+            
+            .calendar-day {
+                min-height: 45px;
+            }
+            
+            .day-number {
+                font-size: 13px;
+            }
+            
+            .checklist-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .item-status {
+                align-self: flex-end;
+            }
+            
+            .color-picker {
+                justify-content: center;
+            }
+            
+            .color-option {
+                flex: 0 0 calc(33.333% - 8px);
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .invite-option {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .invite-tabs {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -509,7 +2553,6 @@ usort($family_memories, function($a, $b) {
             <div class="auth-container">
                 <div class="auth-header">
                     <div class="logo-main">
-                        <!-- Логотип - можно заменить на изображение -->
                         <div class="logo-image">
                             <i class="fas fa-heartbeat"></i>
                         </div>
@@ -599,6 +2642,10 @@ usort($family_memories, function($a, $b) {
                     <a href="#chat" class="nav-item" data-section="chat">
                         <i class="fas fa-comments"></i>
                         <span>Чат</span>
+                    </a>
+                    <a href="#data" class="nav-item" data-section="data">
+                        <i class="fas fa-chart-network"></i>
+                        <span>Данные</span>
                     </a>
                 </nav>
                 
@@ -884,6 +2931,174 @@ usort($family_memories, function($a, $b) {
                             </div>
                         </div>
                     </section>
+                    
+                    <!-- Секция: Данные -->
+                    <section id="data" class="content-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-chart-network"></i> Данные семьи</h2>
+                            <div class="header-actions">
+                                <button class="btn-secondary" onclick="showFamilyInviteModal()">
+                                    <i class="fas fa-user-plus"></i> Пригласить
+                                </button>
+                                <button class="btn-add" onclick="showStatsSettings()">
+                                    <i class="fas fa-cog"></i> Настройки
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="data-dashboard">
+                            <!-- Карточки статистики -->
+                            <div class="stats-grid">
+                                <div class="stat-card pulse-card">
+                                    <div class="stat-icon" style="background: var(--accent-coral);">
+                                        <i class="fas fa-heartbeat"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Пульс семьи</h3>
+                                        <div class="stat-value" id="familyPulse">85</div>
+                                        <div class="stat-label">единиц счастья</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="background: var(--accent-blue);">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Настроение</h3>
+                                        <div class="progress-circle">
+                                            <div class="circle-progress" id="moodFill"></div>
+                                            <span class="progress-value" id="moodValue">85%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="background: var(--accent-peach);">
+                                        <i class="fas fa-trophy"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Достижения</h3>
+                                        <div class="stat-value" id="achievementsCount">24</div>
+                                        <div class="stat-label">за месяц</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="background: var(--accent-lavender);">
+                                        <i class="fas fa-bolt"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Продуктивность</h3>
+                                        <div class="sparkline-container">
+                                            <div class="sparkline" id="productivitySparkline"></div>
+                                            <span class="sparkline-value" id="productivityScore">92%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Приглашение в семью -->
+                            <div class="family-invite-card">
+                                <div class="invite-header">
+                                    <h3><i class="fas fa-user-friends"></i> Пригласить в семью</h3>
+                                    <button class="btn-small" onclick="showFamilyInviteModal()">
+                                        <i class="fas fa-link"></i> Создать приглашение
+                                    </button>
+                                </div>
+                                <div class="invite-content">
+                                    <div class="invite-method active" id="inviteMethodCode">
+                                        <div class="invite-code-display">
+                                            <code id="familyJoinCode"><?php echo isset($_SESSION['join_code']) ? $_SESSION['join_code'] : 'FAM' . rand(1000, 9999); ?></code>
+                                            <button class="btn-copy" onclick="copyJoinCode()">
+                                                <i class="far fa-copy"></i> Копировать
+                                            </button>
+                                        </div>
+                                        <p class="invite-hint">Поделитесь этим кодом с членами семьи</p>
+                                    </div>
+                                    
+                                    <div class="invite-method" id="inviteMethodLink" style="display: none;">
+                                        <div class="invite-link-display">
+                                            <input type="text" id="familyInviteLink" readonly 
+                                                   value="<?php echo 'https://famplan.com/join/' . (isset($_SESSION['join_code']) ? $_SESSION['join_code'] : 'FAM' . rand(1000, 9999)); ?>">
+                                            <button class="btn-copy" onclick="copyInviteLink()">
+                                                <i class="far fa-copy"></i> Копировать
+                                            </button>
+                                        </div>
+                                        <div class="invite-share-buttons">
+                                            <button class="share-btn whatsapp" onclick="shareViaWhatsApp()">
+                                                <i class="fab fa-whatsapp"></i> WhatsApp
+                                            </button>
+                                            <button class="share-btn telegram" onclick="shareViaTelegram()">
+                                                <i class="fab fa-telegram"></i> Telegram
+                                            </button>
+                                            <button class="share-btn email" onclick="shareViaEmail()">
+                                                <i class="far fa-envelope"></i> Email
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="invite-tabs">
+                                        <button class="invite-tab active" onclick="switchInviteMethod('code')">
+                                            <i class="fas fa-key"></i> Код
+                                        </button>
+                                        <button class="invite-tab" onclick="switchInviteMethod('link')">
+                                            <i class="fas fa-link"></i> Ссылка
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Креативные фишки -->
+                            <div class="fun-features">
+                                <h3><i class="fas fa-magic"></i> Креативные фишки</h3>
+                                <div class="features-grid">
+                                    <button class="feature-btn" onclick="generateFamilyQuote()">
+                                        <i class="fas fa-quote-right"></i>
+                                        <span>Цитата дня</span>
+                                    </button>
+                                    
+                                    <button class="feature-btn" onclick="showMemoryOfTheDay()">
+                                        <i class="fas fa-history"></i>
+                                        <span>Воспоминание дня</span>
+                                    </button>
+                                    
+                                    <button class="feature-btn" onclick="showFamilyChallenge()">
+                                        <i class="fas fa-medal"></i>
+                                        <span>Семейный челлендж</span>
+                                    </button>
+                                    
+                                    <button class="feature-btn" onclick="generateFamilyRecipe()">
+                                        <i class="fas fa-utensils"></i>
+                                        <span>Семейный рецепт</span>
+                                    </button>
+                                    
+                                    <button class="feature-btn" onclick="showCompatibilityTest()">
+                                        <i class="fas fa-heart"></i>
+                                        <span>Тест совместимости</span>
+                                    </button>
+                                    
+                                    <button class="feature-btn" onclick="showFuturePrediction()">
+                                        <i class="fas fa-crystal-ball"></i>
+                                        <span>Прогноз на неделю</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Таймлайн семьи -->
+                            <div class="family-timeline-card">
+                                <div class="timeline-header">
+                                    <h3><i class="fas fa-stream"></i> Хроника семьи</h3>
+                                    <button class="btn-small" onclick="exportFamilyData()">
+                                        <i class="fas fa-download"></i> Экспорт
+                                    </button>
+                                </div>
+                                <div class="timeline-content" id="familyTimeline">
+                                    <!-- Заполнится через JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </main>
         </div>
@@ -1024,11 +3239,172 @@ usort($family_memories, function($a, $b) {
             </div>
         </div>
         
+        <!-- Модальное окно приглашения -->
+        <div id="familyInviteModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-user-plus"></i> Пригласить в семью</h2>
+                    <button class="close-modal" onclick="closeModal('familyInviteModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="invite-options">
+                        <div class="invite-option">
+                            <div class="option-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>Через код</h4>
+                                <p>Поделитесь кодом с членами семьи</p>
+                                <div class="option-code">
+                                    <strong id="modalJoinCode">FAM<?php echo rand(1000, 9999); ?></strong>
+                                    <button class="btn-copy-small" onclick="copyCodeFromModal()">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="invite-option">
+                            <div class="option-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>Через ссылку</h4>
+                                <p>Отправьте ссылку для быстрого присоединения</p>
+                                <div class="option-link">
+                                    <input type="text" id="modalInviteLink" readonly 
+                                           value="<?php echo 'https://famplan.com/join/FAM' . rand(1000, 9999); ?>">
+                                    <button class="btn-copy-small" onclick="copyLinkFromModal()">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="invite-option">
+                            <div class="option-icon">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <div class="option-content">
+                                <h4>QR-код</h4>
+                                <p>Отсканируйте для присоединения</p>
+                                <div class="qrcode-container">
+                                    <canvas id="qrCodeCanvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="invite-instructions">
+                        <h4><i class="fas fa-info-circle"></i> Как это работает:</h4>
+                        <ol>
+                            <li>Поделитесь кодом или ссылкой с членами семьи</li>
+                            <li>Они вводят код на экране приветствия</li>
+                            <li>Или переходят по ссылке для автоматического присоединения</li>
+                            <li>После подтверждения родителя, они становятся частью семьи!</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Модальное окно настроек статистики -->
+        <div id="statsSettingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-chart-bar"></i> Настройки данных</h2>
+                    <button class="close-modal" onclick="closeModal('statsSettingsModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-group">
+                        <h3><i class="fas fa-eye"></i> Отображение</h3>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showActivityChart" checked>
+                                <span>Показывать график активности</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showBalanceWheel" checked>
+                                <span>Колесо баланса семьи</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showTimeline" checked>
+                                <span>Хроника семьи</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3><i class="fas fa-bell"></i> Уведомления</h3>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="dailyStats" checked>
+                                <span>Ежедневная статистика</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="weeklyReport" checked>
+                                <span>Еженедельный отчет</span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="achievementAlerts" checked>
+                                <span>Оповещения о достижениях</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3><i class="fas fa-sync"></i> Обновление</h3>
+                        <div class="setting-item">
+                            <label>Автообновление данных:</label>
+                            <div class="range-slider">
+                                <input type="range" id="updateInterval" min="5" max="60" value="30">
+                                <span id="intervalValue">30</span> минут
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group">
+                        <h3><i class="fas fa-palette"></i> Внешний вид</h3>
+                        <div class="theme-options">
+                            <button class="theme-option" onclick="changeDataTheme('warm')">
+                                <div class="theme-preview warm-theme"></div>
+                                <span>Теплая</span>
+                            </button>
+                            <button class="theme-option" onclick="changeDataTheme('cool')">
+                                <div class="theme-preview cool-theme"></div>
+                                <span>Холодная</span>
+                            </button>
+                            <button class="theme-option" onclick="changeDataTheme('vibrant')">
+                                <div class="theme-preview vibrant-theme"></div>
+                                <span>Яркая</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-submit" onclick="saveStatsSettings()">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                </div>
+            </div>
+        </div>
+        
     <?php endif; ?>
     
-    <script src="script.js"></script>
     <script>
+        // ==================== JAVASCRIPT ====================
+        
+        // Основные функции приложения
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('FamPlan initialized');
+            
             initNavigation();
             initCalendar();
             updateCurrentTime();
@@ -1047,6 +3423,9 @@ usort($family_memories, function($a, $b) {
             
             // Инициализация смены логотипа
             initLogoUpload();
+            
+            // Инициализация настроек
+            loadStatsSettings();
         });
         
         function initNavigation() {
@@ -1072,6 +3451,8 @@ usort($family_memories, function($a, $b) {
                             
                             if (sectionId === 'chat') {
                                 scrollChatToBottom();
+                            } else if (sectionId === 'data') {
+                                initDataSection();
                             }
                         }
                     });
@@ -1285,6 +3666,463 @@ usort($family_memories, function($a, $b) {
                     logoImage.innerHTML = `<img src="${savedLogo}" alt="Логотип FamPlan" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
                 }
             }
+        }
+        
+        // ==================== ДАННЫЕ И СТАТИСТИКА ====================
+        
+        function initDataSection() {
+            // Обновление данных
+            updateFamilyStats();
+            
+            // Загрузка таймлайна
+            loadFamilyTimeline();
+            
+            // Инициализация креативных фишек
+            initFunFeatures();
+            
+            // Автообновление
+            startDataAutoUpdate();
+        }
+        
+        function updateFamilyStats() {
+            // Обновляем пульс (случайное значение 60-100)
+            const pulse = Math.floor(Math.random() * 40) + 60;
+            document.getElementById('familyPulse').textContent = pulse;
+            
+            // Обновляем настроение (случайное значение 70-95)
+            const mood = Math.floor(Math.random() * 25) + 70;
+            document.getElementById('moodFill').style.width = `${mood}%`;
+            document.getElementById('moodValue').textContent = `${mood}%`;
+            
+            // Обновляем достижения
+            const achievements = Math.floor(Math.random() * 10) + 15;
+            document.getElementById('achievementsCount').textContent = achievements;
+            
+            // Обновляем продуктивность
+            const productivity = Math.floor(Math.random() * 10) + 90;
+            document.getElementById('productivityScore').textContent = `${productivity}%`;
+            
+            // Обновляем sparkline
+            drawProductivitySparkline();
+        }
+        
+        function drawProductivitySparkline() {
+            const container = document.getElementById('productivitySparkline');
+            if (!container) return;
+            
+            // Генерируем случайные данные
+            const data = Array.from({length: 10}, () => Math.floor(Math.random() * 100));
+            
+            // Создаем простой sparkline с помощью div
+            container.innerHTML = '';
+            const max = Math.max(...data);
+            
+            data.forEach(value => {
+                const bar = document.createElement('div');
+                bar.style.height = `${(value / max) * 100}%`;
+                bar.style.width = '8px';
+                bar.style.backgroundColor = 'var(--accent-blue)';
+                bar.style.margin = '0 2px';
+                bar.style.borderRadius = '2px';
+                container.appendChild(bar);
+            });
+        }
+        
+        function loadFamilyTimeline() {
+            const timeline = document.getElementById('familyTimeline');
+            if (!timeline) return;
+            
+            const events = [
+                { date: 'Сегодня', text: 'Завершили все задачи в чек-листе' },
+                { date: 'Вчера', text: 'Добавили новое воспоминание' },
+                { date: '2 дня назад', text: 'Сходили всей семьей в кино' },
+                { date: 'Неделю назад', text: 'Установили рекорд продуктивности' },
+                { date: 'Месяц назад', text: 'Присоединился новый член семьи' }
+            ];
+            
+            timeline.innerHTML = events.map(event => `
+                <div class="timeline-item">
+                    <div class="timeline-date">${event.date}</div>
+                    <div class="timeline-content-text">${event.text}</div>
+                </div>
+            `).join('');
+        }
+        
+        function initFunFeatures() {
+            // Добавляем обработчики для креативных фишек
+            console.log('Инициализация креативных фишек');
+        }
+        
+        // ==================== ПРИГЛАШЕНИЯ ====================
+        
+        function showFamilyInviteModal() {
+            // Генерируем новый код если его нет
+            if (!document.getElementById('modalJoinCode').textContent) {
+                const code = 'FAM' + Math.floor(1000 + Math.random() * 9000);
+                document.getElementById('modalJoinCode').textContent = code;
+                document.getElementById('modalInviteLink').value = `https://famplan.com/join/${code}`;
+                
+                // Генерируем QR-код
+                generateQRCode(code);
+            }
+            
+            showModal('familyInviteModal');
+        }
+        
+        function switchInviteMethod(method) {
+            const codeTab = document.getElementById('inviteMethodCode');
+            const linkTab = document.getElementById('inviteMethodLink');
+            const tabs = document.querySelectorAll('.invite-tab');
+            
+            if (method === 'code') {
+                codeTab.style.display = 'block';
+                linkTab.style.display = 'none';
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+            } else {
+                codeTab.style.display = 'none';
+                linkTab.style.display = 'block';
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+            }
+        }
+        
+        function copyJoinCode() {
+            const code = document.getElementById('familyJoinCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showNotification('Код скопирован! 📋', 'success');
+            });
+        }
+        
+        function copyInviteLink() {
+            const link = document.getElementById('familyInviteLink');
+            link.select();
+            navigator.clipboard.writeText(link.value).then(() => {
+                showNotification('Ссылка скопирована! 🔗', 'success');
+            });
+        }
+        
+        function copyCodeFromModal() {
+            const code = document.getElementById('modalJoinCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showNotification('Код скопирован! 📋', 'success');
+            });
+        }
+        
+        function copyLinkFromModal() {
+            const link = document.getElementById('modalInviteLink');
+            link.select();
+            navigator.clipboard.writeText(link.value).then(() => {
+                showNotification('Ссылка скопирована! 🔗', 'success');
+            });
+        }
+        
+        function generateQRCode(code) {
+            const canvas = document.getElementById('qrCodeCanvas');
+            if (!canvas || !window.QRCode) return;
+            
+            // Устанавливаем размеры канваса
+            canvas.width = 150;
+            canvas.height = 150;
+            
+            // Генерируем QR-код
+            QRCode.toCanvas(canvas, `FAMPLAN_JOIN:${code}`, {
+                width: 150,
+                margin: 2,
+                color: {
+                    dark: '#3C3529',
+                    light: '#F5EFE0'
+                }
+            }, function(error) {
+                if (error) console.error(error);
+            });
+        }
+        
+        function shareViaWhatsApp() {
+            const link = document.getElementById('familyInviteLink').value;
+            const text = `Присоединяйся к нашей семье в FamPlan! 🏡\nКод: ${document.getElementById('familyJoinCode').textContent}\n${link}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+        
+        function shareViaTelegram() {
+            const link = document.getElementById('familyInviteLink').value;
+            const text = `Присоединяйся к нашей семье в FamPlan! 🏡\nКод: ${document.getElementById('familyJoinCode').textContent}\n${link}`;
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`, '_blank');
+        }
+        
+        function shareViaEmail() {
+            const link = document.getElementById('familyInviteLink').value;
+            const code = document.getElementById('familyJoinCode').textContent;
+            const subject = 'Приглашение в семью FamPlan 🏡';
+            const body = `Привет!\n\nПрисоединяйся к нашей семье в FamPlan!\n\nКод для присоединения: ${code}\nИли перейди по ссылке: ${link}\n\nС нетерпением ждем тебя! ❤️`;
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+        
+        // ==================== КРЕАТИВНЫЕ ФИШКИ ====================
+        
+        function generateFamilyQuote() {
+            const quotes = [
+                "Семья – это команда. Вместе мы можем всё! 💪",
+                "Лучшее наследство детям – счастливые воспоминания. ✨",
+                "Дом там, где тебя любят и ждут. ❤️",
+                "Семейное счастье – это не пункт назначения, а путешествие. 🚀",
+                "Вместе мы – сила, любовь и поддержка. 🌟"
+            ];
+            
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            showNotification(randomQuote, 'info');
+        }
+        
+        function showMemoryOfTheDay() {
+            const memories = [
+                "Помните наш первый совместный поход? Вот та старая фотография у костра! 🔥",
+                "Как смеялись, когда готовили тот невероятный торт на день рождения! 🎂",
+                "Тот дождливый день, когда играли в настолки целый день – было так здорово! 🎲"
+            ];
+            
+            const randomMemory = memories[Math.floor(Math.random() * memories.length)];
+            showNotification(`🎞️ Воспоминание дня: ${randomMemory}`, 'info', 5000);
+        }
+        
+        function showFamilyChallenge() {
+            const challenges = [
+                "СЕГОДНЯШНИЙ ЧЕЛЛЕНД: Устройте семейный ужин без гаджетов! 📵",
+                "ЧЕЛЛЕНД: Сделайте друг другу комплименты за завтраком! 💬",
+                "ЧЕЛЛЕНД: Вместе приготовьте новое блюдо! 👨‍🍳",
+                "ЧЕЛЛЕНД: Прогуляйтесь вместе после ужина! 🚶‍♂️🚶‍♀️"
+            ];
+            
+            const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+            showNotification(`🏆 ${randomChallenge}`, 'success', 6000);
+        }
+        
+        function generateFamilyRecipe() {
+            const recipes = [
+                "Семейная пицца 🍕",
+                "Домашние пельмени 🥟", 
+                "Шоколадные маффины 🧁",
+                "Суп-пюре из тыквы 🎃"
+            ];
+            
+            const recipe = recipes[Math.floor(Math.random() * recipes.length)];
+            showNotification(`🍽️ Рецепт недели: ${recipe}`, 'info', 5000);
+        }
+        
+        function showCompatibilityTest() {
+            const compatibility = Math.floor(Math.random() * 40) + 60; // 60-100%
+            showNotification(`❤️ Тест совместимости: ${compatibility}%! ${compatibility > 80 ? 'Идеально! 💖' : 'Хорошо! 👍'}`, 'success');
+        }
+        
+        function showFuturePrediction() {
+            const predictions = [
+                "На этой неделе вас ждет приятный сюрприз! 🎁",
+                "Выходные будут полны веселья и смеха! 😄",
+                "Кто-то из семьи достигнет успеха в учебе! 📚",
+                "Вас ждет вкусный семейный ужин! 🍕",
+                "Получите неожиданный подарок! 🎉"
+            ];
+            
+            const prediction = predictions[Math.floor(Math.random() * predictions.length)];
+            showNotification(`🔮 Прогноз на неделю: ${prediction}`, 'info');
+        }
+        
+        // ==================== НАСТРОЙКИ ДАННЫХ ====================
+        
+        function showStatsSettings() {
+            showModal('statsSettingsModal');
+        }
+        
+        function changeDataTheme(theme) {
+            const root = document.documentElement;
+            
+            switch(theme) {
+                case 'warm':
+                    root.style.setProperty('--accent-coral', '#FF9AA2');
+                    root.style.setProperty('--accent-blue', '#FFD3B6');
+                    root.style.setProperty('--accent-peach', '#FF9AA2');
+                    break;
+                case 'cool':
+                    root.style.setProperty('--accent-coral', '#A8D8EA');
+                    root.style.setProperty('--accent-blue', '#C7CEEA');
+                    root.style.setProperty('--accent-peach', '#A8D8EA');
+                    break;
+                case 'vibrant':
+                    root.style.setProperty('--accent-coral', '#FF9AA2');
+                    root.style.setProperty('--accent-blue', '#B5EAD7');
+                    root.style.setProperty('--accent-peach', '#FFD3B6');
+                    break;
+            }
+            
+            showNotification('Тема изменена!', 'success');
+        }
+        
+        function saveStatsSettings() {
+            const settings = {
+                showActivityChart: document.getElementById('showActivityChart').checked,
+                showBalanceWheel: document.getElementById('showBalanceWheel').checked,
+                showTimeline: document.getElementById('showTimeline').checked,
+                dailyStats: document.getElementById('dailyStats').checked,
+                weeklyReport: document.getElementById('weeklyReport').checked,
+                achievementAlerts: document.getElementById('achievementAlerts').checked,
+                updateInterval: document.getElementById('updateInterval').value
+            };
+            
+            localStorage.setItem('famplanStatsSettings', JSON.stringify(settings));
+            showNotification('Настройки сохранены!', 'success');
+            closeModal('statsSettingsModal');
+        }
+        
+        function loadStatsSettings() {
+            const saved = localStorage.getItem('famplanStatsSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                
+                document.getElementById('showActivityChart').checked = settings.showActivityChart;
+                document.getElementById('showBalanceWheel').checked = settings.showBalanceWheel;
+                document.getElementById('showTimeline').checked = settings.showTimeline;
+                document.getElementById('dailyStats').checked = settings.dailyStats;
+                document.getElementById('weeklyReport').checked = settings.weeklyReport;
+                document.getElementById('achievementAlerts').checked = settings.achievementAlerts;
+                document.getElementById('updateInterval').value = settings.updateInterval;
+                document.getElementById('intervalValue').textContent = settings.updateInterval;
+            }
+        }
+        
+        function startDataAutoUpdate() {
+            const interval = localStorage.getItem('famplanStatsSettings') 
+                ? JSON.parse(localStorage.getItem('famplanStatsSettings')).updateInterval * 60000 
+                : 30 * 60000;
+            
+            setInterval(() => {
+                if (document.querySelector('#data.content-section.active')) {
+                    updateFamilyStats();
+                    showNotification('📊 Статистика обновлена!', 'info', 2000);
+                }
+            }, interval);
+        }
+        
+        // ==================== ЭКСПОРТ ДАННЫХ ====================
+        
+        function exportFamilyData() {
+            const data = {
+                exportDate: new Date().toISOString(),
+                events: [],
+                checklists: [],
+                familyMembers: [],
+                memories: []
+            };
+            
+            // Собираем данные из DOM (в реальном приложении - с сервера)
+            // Это демо-реализация
+            showNotification('📥 Экспорт данных начат...', 'info');
+            
+            setTimeout(() => {
+                // Создаем JSON файл
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                // Создаем ссылку для скачивания
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `famplan-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                // Освобождаем память
+                URL.revokeObjectURL(url);
+                
+                showNotification('✅ Данные успешно экспортированы!', 'success');
+            }, 1000);
+        }
+        
+        // ==================== УВЕДОМЛЕНИЯ ====================
+        
+        function showNotification(message, type = 'info', duration = 3000) {
+            // Создаем контейнер для уведомлений если его нет
+            let notificationContainer = document.querySelector('.notification-container');
+            if (!notificationContainer) {
+                notificationContainer = document.createElement('div');
+                notificationContainer.className = 'notification-container';
+                notificationContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 10000;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    max-width: 350px;
+                `;
+                document.body.appendChild(notificationContainer);
+            }
+            
+            // Иконки для разных типов уведомлений
+            const icons = {
+                success: { icon: 'fas fa-check-circle', color: '#28a745' },
+                error: { icon: 'fas fa-exclamation-circle', color: '#dc3545' },
+                warning: { icon: 'fas fa-exclamation-triangle', color: '#ffc107' },
+                info: { icon: 'fas fa-info-circle', color: '#17a2b8' }
+            };
+            
+            const config = icons[type] || icons.info;
+            
+            // Создаем уведомление
+            const notification = document.createElement('div');
+            notification.className = `notification-global ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                z-index: 10000;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                max-width: 400px;
+                animation: slideIn 0.3s ease;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.2);
+                color: white;
+                background: ${type === 'success' ? 'rgba(40, 167, 69, 0.95)' : 
+                          type === 'error' ? 'rgba(220, 53, 69, 0.95)' : 
+                          'rgba(23, 162, 184, 0.95)'};
+            `;
+            
+            notification.innerHTML = `
+                <i class="${config.icon}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" style="margin-left: auto; background: none; border: none; color: white; cursor: pointer; font-size: 20px;">&times;</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Автоматическое скрытие
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, duration);
+            
+            // Остановить автоскрытие при наведении
+            notification.addEventListener('mouseenter', () => {
+                clearTimeout(autoHide);
+            });
+            
+            const autoHide = setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
         }
         
         // Закрытие модальных окон при клике вне контента

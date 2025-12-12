@@ -2214,4 +2214,407 @@ function showNotification(message, type = 'info', duration = 3000) {
             }, 300);
         }, 2000);
     });
+}// ==================== ДАННЫЕ И СТАТИСТИКА ====================
+
+function initDataSection() {
+    // Обновление данных
+    updateFamilyStats();
+    
+    // Загрузка таймлайна
+    loadFamilyTimeline();
+    
+    // Инициализация креативных фишек
+    initFunFeatures();
+    
+    // Автообновление
+    startDataAutoUpdate();
+}
+
+function updateFamilyStats() {
+    // Обновляем пульс (случайное значение 60-100)
+    const pulse = Math.floor(Math.random() * 40) + 60;
+    document.getElementById('familyPulse').textContent = pulse;
+    
+    // Обновляем настроение (случайное значение 70-95)
+    const mood = Math.floor(Math.random() * 25) + 70;
+    document.getElementById('moodFill').style.width = `${mood}%`;
+    document.querySelector('.mood-value').textContent = `${mood}%`;
+    
+    // Обновляем достижения
+    const achievements = Math.floor(Math.random() * 10) + 15;
+    document.getElementById('achievementsCount').textContent = achievements;
+    
+    // Обновляем продуктивность
+    const productivity = Math.floor(Math.random() * 10) + 90;
+    document.getElementById('productivityScore').textContent = `${productivity}%`;
+    
+    // Обновляем sparkline
+    drawProductivitySparkline();
+}
+
+function drawProductivitySparkline() {
+    const container = document.getElementById('productivitySparkline');
+    if (!container) return;
+    
+    // Генерируем случайные данные
+    const data = Array.from({length: 10}, () => Math.floor(Math.random() * 100));
+    
+    // Создаем простой sparkline с помощью div
+    container.innerHTML = '';
+    const max = Math.max(...data);
+    
+    data.forEach(value => {
+        const bar = document.createElement('div');
+        bar.style.height = `${(value / max) * 100}%`;
+        bar.style.width = '8px';
+        bar.style.backgroundColor = 'rgba(255,255,255,0.8)';
+        bar.style.margin = '0 2px';
+        bar.style.borderRadius = '2px';
+        container.appendChild(bar);
+    });
+}
+
+function loadFamilyTimeline() {
+    const timeline = document.getElementById('familyTimeline');
+    if (!timeline) return;
+    
+    const events = [
+        { date: 'Сегодня', text: 'Завершили все задачи в чек-листе' },
+        { date: 'Вчера', text: 'Добавили новое воспоминание' },
+        { date: '2 дня назад', text: 'Сходили всей семьей в кино' },
+        { date: 'Неделю назад', text: 'Установили рекорд продуктивности' },
+        { date: 'Месяц назад', text: 'Присоединился новый член семьи' }
+    ];
+    
+    timeline.innerHTML = events.map(event => `
+        <div class="timeline-item">
+            <div class="timeline-date">${event.date}</div>
+            <div class="timeline-content">${event.text}</div>
+        </div>
+    `).join('');
+}
+
+function initFunFeatures() {
+    // Добавляем обработчики для креативных фишек
+    console.log('Инициализация креативных фишек');
+}
+
+// ==================== ПРИГЛАШЕНИЯ ====================
+
+function showFamilyInviteModal() {
+    // Генерируем новый код если его нет
+    if (!document.getElementById('modalJoinCode').textContent) {
+        const code = 'FAM' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('modalJoinCode').textContent = code;
+        document.getElementById('modalInviteLink').value = `https://famplan.com/join/${code}`;
+        
+        // Генерируем QR-код
+        generateQRCode(code);
+    }
+    
+    showModal('familyInviteModal');
+}
+
+function switchInviteMethod(method) {
+    const codeTab = document.getElementById('inviteMethodCode');
+    const linkTab = document.getElementById('inviteMethodLink');
+    const tabs = document.querySelectorAll('.invite-tab');
+    
+    if (method === 'code') {
+        codeTab.style.display = 'block';
+        linkTab.style.display = 'none';
+        tabs[0].classList.add('active');
+        tabs[1].classList.remove('active');
+    } else {
+        codeTab.style.display = 'none';
+        linkTab.style.display = 'block';
+        tabs[0].classList.remove('active');
+        tabs[1].classList.add('active');
+    }
+}
+
+function copyJoinCode() {
+    const code = document.getElementById('familyJoinCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        showNotification('Код скопирован! 📋', 'success');
+    });
+}
+
+function copyInviteLink() {
+    const link = document.getElementById('familyInviteLink');
+    link.select();
+    navigator.clipboard.writeText(link.value).then(() => {
+        showNotification('Ссылка скопирована! 🔗', 'success');
+    });
+}
+
+function copyCodeFromModal() {
+    const code = document.getElementById('modalJoinCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        showNotification('Код скопирован! 📋', 'success');
+    });
+}
+
+function copyLinkFromModal() {
+    const link = document.getElementById('modalInviteLink');
+    link.select();
+    navigator.clipboard.writeText(link.value).then(() => {
+        showNotification('Ссылка скопирована! 🔗', 'success');
+    });
+}
+
+function generateQRCode(code) {
+    const canvas = document.getElementById('qrCodeCanvas');
+    if (!canvas || !window.QRCode) return;
+    
+    // Очищаем канвас
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Генерируем QR-код
+    QRCode.toCanvas(canvas, `FAMPLAN_JOIN:${code}`, {
+        width: 150,
+        margin: 2,
+        color: {
+            dark: '#3C3529',
+            light: '#F5EFE0'
+        }
+    }, function(error) {
+        if (error) console.error(error);
+    });
+}
+
+function shareViaWhatsApp() {
+    const link = document.getElementById('familyInviteLink').value;
+    const text = `Присоединяйся к нашей семье в FamPlan! 🏡\nКод: ${document.getElementById('familyJoinCode').textContent}\n${link}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function shareViaTelegram() {
+    const link = document.getElementById('familyInviteLink').value;
+    const text = `Присоединяйся к нашей семье в FamPlan! 🏡\nКод: ${document.getElementById('familyJoinCode').textContent}\n${link}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function shareViaEmail() {
+    const link = document.getElementById('familyInviteLink').value;
+    const code = document.getElementById('familyJoinCode').textContent;
+    const subject = 'Приглашение в семью FamPlan 🏡';
+    const body = `Привет!\n\nПрисоединяйся к нашей семье в FamPlan!\n\nКод для присоединения: ${code}\nИли перейди по ссылке: ${link}\n\nС нетерпением ждем тебя! ❤️`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// ==================== КРЕАТИВНЫЕ ФИШКИ ====================
+
+function generateFamilyQuote() {
+    const quotes = [
+        "Семья – это команда. Вместе мы можем всё! 💪",
+        "Лучшее наследство детям – счастливые воспоминания. ✨",
+        "Дом там, где тебя любят и ждут. ❤️",
+        "Семейное счастье – это не пункт назначения, а путешествие. 🚀",
+        "Вместе мы – сила, любовь и поддержка. 🌟"
+    ];
+    
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    showNotification(randomQuote, 'info');
+}
+
+function showMemoryOfTheDay() {
+    const memories = [
+        "Помните наш первый совместный поход? Вот та старая фотография у костра! 🔥",
+        "Как смеялись, когда готовили тот невероятный торт на день рождения! 🎂",
+        "Тот дождливый день, когда играли в настолки целый день – было так здорово! 🎲"
+    ];
+    
+    const randomMemory = memories[Math.floor(Math.random() * memories.length)];
+    showNotification(`🎞️ Воспоминание дня: ${randomMemory}`, 'info', 5000);
+}
+
+function showFamilyChallenge() {
+    const challenges = [
+        "СЕГОДНЯШНИЙ ЧЕЛЛЕНД: Устройте семейный ужин без гаджетов! 📵",
+        "ЧЕЛЛЕНД: Сделайте друг другу комплименты за завтраком! 💬",
+        "ЧЕЛЛЕНД: Вместе приготовьте новое блюдо! 👨‍🍳",
+        "ЧЕЛЛЕНД: Прогуляйтесь вместе после ужина! 🚶‍♂️🚶‍♀️"
+    ];
+    
+    const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+    showNotification(`🏆 ${randomChallenge}`, 'success', 6000);
+}
+
+function generateFamilyRecipe() {
+    const recipes = [
+        "Семейная пицца 🍕",
+        "Домашние пельмени 🥟", 
+        "Шоколадные маффины 🧁",
+        "Суп-пюре из тыквы 🎃"
+    ];
+    
+    const recipe = recipes[Math.floor(Math.random() * recipes.length)];
+    showNotification(`🍽️ Рецепт недели: ${recipe}`, 'info', 5000);
+}
+
+function showCompatibilityTest() {
+    const compatibility = Math.floor(Math.random() * 40) + 60; // 60-100%
+    showNotification(`❤️ Тест совместимости: ${compatibility}%! ${compatibility > 80 ? 'Идеально! 💖' : 'Хорошо! 👍'}`, 'success');
+}
+
+function showFuturePrediction() {
+    const predictions = [
+        "На этой неделе вас ждет приятный сюрприз! 🎁",
+        "Выходные будут полны веселья и смеха! 😄",
+        "Кто-то из семьи достигнет успеха в учебе! 📚",
+        "Вас ждет вкусный семейный ужин! 🍕",
+        "Получите неожиданный подарок! 🎉"
+    ];
+    
+    const prediction = predictions[Math.floor(Math.random() * predictions.length)];
+    showNotification(`🔮 Прогноз на неделю: ${prediction}`, 'info');
+}
+
+// ==================== НАСТРОЙКИ ДАННЫХ ====================
+
+function showStatsSettings() {
+    showModal('statsSettingsModal');
+}
+
+function changeDataTheme(theme) {
+    const root = document.documentElement;
+    
+    switch(theme) {
+        case 'warm':
+            root.style.setProperty('--accent-coral', '#FF9AA2');
+            root.style.setProperty('--accent-blue', '#FFD3B6');
+            root.style.setProperty('--accent-peach', '#FF9AA2');
+            break;
+        case 'cool':
+            root.style.setProperty('--accent-coral', '#A8D8EA');
+            root.style.setProperty('--accent-blue', '#C7CEEA');
+            root.style.setProperty('--accent-peach', '#A8D8EA');
+            break;
+        case 'vibrant':
+            root.style.setProperty('--accent-coral', '#FF9AA2');
+            root.style.setProperty('--accent-blue', '#B5EAD7');
+            root.style.setProperty('--accent-peach', '#FFD3B6');
+            break;
+    }
+    
+    showNotification('Тема изменена!', 'success');
+}
+
+function saveStatsSettings() {
+    const settings = {
+        showActivityChart: document.getElementById('showActivityChart').checked,
+        showBalanceWheel: document.getElementById('showBalanceWheel').checked,
+        showTimeline: document.getElementById('showTimeline').checked,
+        dailyStats: document.getElementById('dailyStats').checked,
+        weeklyReport: document.getElementById('weeklyReport').checked,
+        achievementAlerts: document.getElementById('achievementAlerts').checked,
+        updateInterval: document.getElementById('updateInterval').value
+    };
+    
+    localStorage.setItem('famplanStatsSettings', JSON.stringify(settings));
+    showNotification('Настройки сохранены!', 'success');
+    closeModal('statsSettingsModal');
+}
+
+function loadStatsSettings() {
+    const saved = localStorage.getItem('famplanStatsSettings');
+    if (saved) {
+        const settings = JSON.parse(saved);
+        
+        document.getElementById('showActivityChart').checked = settings.showActivityChart;
+        document.getElementById('showBalanceWheel').checked = settings.showBalanceWheel;
+        document.getElementById('showTimeline').checked = settings.showTimeline;
+        document.getElementById('dailyStats').checked = settings.dailyStats;
+        document.getElementById('weeklyReport').checked = settings.weeklyReport;
+        document.getElementById('achievementAlerts').checked = settings.achievementAlerts;
+        document.getElementById('updateInterval').value = settings.updateInterval;
+        document.getElementById('intervalValue').textContent = settings.updateInterval;
+    }
+}
+
+function startDataAutoUpdate() {
+    const interval = localStorage.getItem('famplanStatsSettings') 
+        ? JSON.parse(localStorage.getItem('famplanStatsSettings')).updateInterval * 60000 
+        : 30 * 60000;
+    
+    setInterval(() => {
+        if (document.querySelector('#data.content-section.active')) {
+            updateFamilyStats();
+            showNotification('📊 Статистика обновлена!', 'info', 2000);
+        }
+    }, interval);
+}
+
+// ==================== ЭКСПОРТ ДАННЫХ ====================
+
+function exportFamilyData() {
+    const data = {
+        exportDate: new Date().toISOString(),
+        events: [],
+        checklists: [],
+        familyMembers: [],
+        memories: []
+    };
+    
+    // Собираем данные из DOM (в реальном приложении - с сервера)
+    // Это демо-реализация
+    showNotification('📥 Экспорт данных начат...', 'info');
+    
+    setTimeout(() => {
+        // Создаем JSON файл
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Создаем ссылку для скачивания
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `famplan-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Освобождаем память
+        URL.revokeObjectURL(url);
+        
+        showNotification('✅ Данные успешно экспортированы!', 'success');
+    }, 1000);
+}
+
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+
+// Обновляем функцию handleSectionChange
+function handleSectionChange(sectionId) {
+    switch(sectionId) {
+        case 'calendar':
+            highlightTodayInCalendar();
+            break;
+        case 'checklists':
+            updateChecklistProgress();
+            break;
+        case 'data':
+            initDataSection();
+            break;
+        case 'chat':
+            scrollChatToBottom();
+            focusChatInput();
+            loadChatMessages();
+            break;
+    }
+}
+
+// Обновляем функцию initAllModules
+function initAllModules() {
+    initNavigation();
+    initCalendarInteractions();
+    initChecklists();
+    initChat();
+    initModals();
+    initForms();
+    initNotifications();
+    initTooltips();
+    // Загружаем настройки статистики
+    loadStatsSettings();
 }
