@@ -1,0 +1,157 @@
+<?php
+session_start();
+
+// Простая проверка авторизации
+if (!isset($_SESSION['user_id'])) {
+    // Показываем форму входа
+    include 'login_form.php';
+    exit;
+}
+
+// Простой календарь
+function generateSimpleCalendar($year, $month) {
+    $firstDay = date('N', strtotime("$year-$month-01"));
+    $daysInMonth = date('t', strtotime("$year-$month-01"));
+    
+    $monthNames = [
+        1 => 'Январь', 2 => 'Февраль', 3 => 'Март', 
+        4 => 'Апрель', 5 => 'Май', 6 => 'Июнь',
+        7 => 'Июль', 8 => 'Август', 9 => 'Сентябрь',
+        10 => 'Октябрь', 11 => 'Ноябрь', 12 => 'Декабрь'
+    ];
+    
+    $days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    
+    $calendar = '<div class="calendar-grid">';
+    
+    foreach ($days as $day) {
+        $calendar .= '<div class="calendar-day-header">' . $day . '</div>';
+    }
+    
+    for ($i = 1; $i < $firstDay; $i++) {
+        $calendar .= '<div class="calendar-day empty"></div>';
+    }
+    
+    for ($day = 1; $day <= $daysInMonth; $day++) {
+        $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
+        $isToday = ($date == date('Y-m-d'));
+        
+        $class = 'calendar-day';
+        if ($isToday) $class .= ' today';
+        
+        $calendar .= '<div class="' . $class . '" data-date="' . $date . '">';
+        $calendar .= '<div class="day-number">' . $day . '</div>';
+        $calendar .= '</div>';
+    }
+    
+    $calendar .= '</div>';
+    return $calendar;
+}
+
+// Текущий месяц
+$currentMonth = date('m');
+$currentYear = date('Y');
+$calendar_html = generateSimpleCalendar($currentYear, $currentMonth);
+
+// Данные пользователя
+$username = $_SESSION['username'] ?? 'Пользователь';
+$role = $_SESSION['role'] ?? 'child';
+?>
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamPlan • Календарь</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-sidebar">
+                    <div class="logo-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h2>FamPlan</h2>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar" style="background: #A8D8EA;">
+                        <?php echo $role === 'parent' ? '👑' : '🌟'; ?>
+                    </div>
+                    <div class="user-details">
+                        <h3><?php echo htmlspecialchars($username); ?></h3>
+                        <span class="user-role"><?php echo $role === 'parent' ? '👑 Родитель' : '🌟 Ребенок'; ?></span>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active">
+                    <i class="fas fa-home"></i>
+                    <span>Главная</span>
+                </a>
+                <a href="#calendar" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Календарь</span>
+                </a>
+                <a href="#checklists" class="nav-item">
+                    <i class="fas fa-tasks"></i>
+                    <span>Чек-листы</span>
+                </a>
+                <a href="#chat" class="nav-item">
+                    <i class="fas fa-comments"></i>
+                    <span>Чат</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <form method="POST" action="logout.php">
+                    <button type="submit" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </button>
+                </form>
+            </div>
+        </aside>
+        
+        <!-- Основной контент -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <h1>Календарь</h1>
+                    <p class="greeting">Добро пожаловать, <?php echo htmlspecialchars($username); ?>!</p>
+                </div>
+                <div class="header-right">
+                    <div class="date-display">
+                        <i class="fas fa-calendar-day"></i>
+                        <span><?php echo date('d.m.Y'); ?></span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Календарь -->
+            <section id="dashboard" class="content-section active">
+                <div class="calendar-widget">
+                    <div class="calendar-header">
+                        <h3><?php 
+                            $monthNames = [
+                                1 => 'Январь', 2 => 'Февраль', 3 => 'Март', 
+                                4 => 'Апрель', 5 => 'Май', 6 => 'Июнь',
+                                7 => 'Июль', 8 => 'Август', 9 => 'Сентябрь',
+                                10 => 'Октябрь', 11 => 'Ноябрь', 12 => 'Декабрь'
+                            ];
+                            echo $monthNames[(int)$currentMonth] . ' ' . $currentYear;
+                        ?></h3>
+                    </div>
+                    <?php echo $calendar_html; ?>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
